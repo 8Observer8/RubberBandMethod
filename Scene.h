@@ -3,7 +3,6 @@
 
 #include <QGLWidget>
 #include <QMouseEvent>
-#include <utility>      // std::pair
 #include <vector>       // std::vector
 #include "Point.h"
 
@@ -17,12 +16,13 @@ private:
     void paintGL();
     void resizeGL( int w, int h );
 
-    void mousePressEvent( QMouseEvent* pe );
+    void mouseMoveEvent( QMouseEvent* pe );
     void mouseReleaseEvent( QMouseEvent* pe );
 
 private:
-    std::vector< std::pair<Point, Point> > segments;
-    Point p1, p2;
+    std::vector<Point> points;
+    std::vector< std::vector<Point> > shapes;
+    Point m_point;
 };
 
 #endif // SCENE_H

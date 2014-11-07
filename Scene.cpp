@@ -4,7 +4,7 @@
 Scene::Scene( QWidget *parent ) :
     QGLWidget( parent )
 {
-
+    this->setMouseTracking( true );
 }
 
 void Scene::initializeGL()
@@ -23,10 +23,32 @@ void Scene::paintGL()
 
     glLineWidth( 2.0f );
     glBegin( GL_LINES );
-        for ( size_t i = 0; i < segments.size(); ++i ) {
-            glVertex2f( segments[i].first.x, segments[i].first.y );
-            glVertex2f( segments[i].second.x, segments[i].second.y );
+    {
+        if ( points.size() > 1 ) {
+            for ( size_t i = 0; i < points.size(); ++i ) {
+                if ( i == 0 ) {
+                    continue;
+                }
+                glVertex2f( points[i-1].x, points[i-1].y );
+                glVertex2f( points[i].x, points[i].y );
+            }
         }
+
+        if ( points.size() != 0 ) {
+            glVertex2f( points[points.size()-1].x, points[points.size()-1].y );
+            glVertex2f( m_point.x, m_point.y );
+        }
+
+        for ( size_t i = 0; i < shapes.size(); ++i ) {
+            for ( size_t j = 0; j < shapes[i].size(); ++j ) {
+                if ( j == 0 ) {
+                    continue;
+                }
+                glVertex2f( shapes[i][j-1].x, shapes[i][j-1].y );
+                glVertex2f( shapes[i][j].x, shapes[i][j].y );
+            }
+        }
+    }
     glEnd();
 }
 
@@ -45,22 +67,36 @@ void Scene::resizeGL( int w, int h )
     glLoadIdentity();
 
     glOrtho( -640.0f/2.0f, 640.0f/2.0f, -480.0f / 2.0f, 480.0f / 2.0f,
-              1.0, -1.0);
+             1.0, -1.0);
 
     glMatrixMode( GL_MODELVIEW );
     glLoadIdentity();
 }
 
-void Scene::mousePressEvent( QMouseEvent* pe )
+void Scene::mouseMoveEvent( QMouseEvent* pe )
 {
-    p1.x = pe->pos().x() - this->width() / 2;
-    p1.y = -(  pe->pos().y() - this->height() / 2 );
+    m_point.x = pe->pos().x() - this->width() / 2;
+    m_point.y = -(  pe->pos().y() - this->height() / 2 );
+
+    updateGL();
 }
 
-void Scene::mouseReleaseEvent( QMouseEvent* pe )
+void Scene::mouseReleaseEvent( QMouseEvent *pe )
 {
-    p2.x = pe->pos().x() - this->width() / 2;
-    p2.y = -(  pe->pos().y() - this->height() / 2 );
-    segments.push_back( std::make_pair( p1, p2 ) );
+    // RightButton
+    if ( pe->button() & Qt::RightButton ) {
+        shapes.push_back( points );
+        points.clear();
+    }
+
+    // LeftButton
+    if ( pe->button() & Qt::LeftButton ) {
+        Point p;
+        p.x = pe->pos().x() - this->width() / 2;
+        p.y = -(  pe->pos().y() - this->height() / 2 );
+
+        points.push_back( p );
+    }
+
     updateGL();
 }
